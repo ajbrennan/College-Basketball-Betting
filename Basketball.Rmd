@@ -1,0 +1,545 @@
+```{r}
+library(tidyverse)
+library(readxl)
+library(lubridate)
+cbb <- read_excel("/Users/anthonybrennan/Downloads/Basketball.xlsx", sheet = "CBB Odds")
+cbb <- cbb[,c(1:4,7:12)]
+
+a10 <- c("DAV","DAY","DUQ","FOR","GMU","GW","JOES","LAS","MASS","RICH","SBU","SLU","URI","VCU","")
+aac <- c("CIN","ECU","HOU","MEM","SMU","TEM","TLSA","TULN","UCF","USF","WICH","","","","")
+acc <- c("BC","CLEM","DUKE","FSU","GT","LOU","MIA","NCST","ND","PITT","SYR","UNC","UVA","VT","WAKE")
+ameast <- c("ALB","BING","HART","ME","NJIT","STBK","UMBC","UML","UNH","UVM","","","","","")
+atlsun <- c("BELL","FGCU","JAX","KENN","LIB","LIP","STET","UNA","UNF","","","","","","")
+b10 <- c("ILL","IOWA","IU","MD","MICH","MINN","MSU","NEB","NW","OSU","PSU","PUR","RUTG","WISC","")
+b12 <- c("BAY","ISU","KSU","KU","OKST","OU","TCU","TEX","TTU","WVU","","","","","")
+bigeast <- c("BUT","CONN","CREI","DEP","GTWN","HALL","MARQ","PROV","SJU","VILL","XAV","","","","")
+bigsky <- c("EWU","IDHO","IDST","MONT","MTST","NAU","PRST","SAC","SUU","UNCO","WEB","","","","")
+bigsouth <- c("CAM","CHSO","GWEB","HAMP","HP","LONG","PRES","RAD","SCUP","UNCA","WIN","","","","")
+bigwest <- c("CP","CSUB","CSUF","CSUN","HAW","LBSU","UCD","UCI","UCR","UCSB","UCSD","","","","")
+colonial <- c("COFC","DEL","ELON","DREX","HOF","JMU","NE","TOW","UNCW","W&M","","","","","")
+cusa <- c("CHAR","FAU","FIU","LT","MRSH","MTU","ODU","RICE","UAB","UNT","USM","UTEP","UTSA","WKU","")
+horizon <- c("CLEV","DET","GB","IUPU","MILW","NKU","OAK","PFW","RMU","UIC","WRST","YSU","","","")
+maac <- c("CAN","FAIR","IONA","MAN","MONM","MRST","NIAG","QUIN","RID","SIE","SPU","","","","")
+mac <- c("AKR","BALL","BGSU","BUFF","CMU","EMU","KENT","M-OH","NIU","OHIO","TOL","WMU","","","")
+meac <- c("COPP","DSU","FAMU","HOW","MORG","NCAT","NCCU","NORF","SCST","","","","","","")
+mtw <- c("AFA","BSU","CSU","FRES","NEV","SDSU","SJSU","UNLV","UNM","USU","WYO","","","","")
+mvc <- c("BRAD","DRKE","EVAN","ILST","INST","LUC","MOST","SIU","UNI","VALP","","","","","")
+nec <- c("BRY","CCSU","FDU","LIU","MRMK","MSM","SFBK","SFPA","SHU","WAG","","","","","")
+ovc <- c("APSU","BEL","EIU","EKU","JVST","MORE","MUR","SEMO","SIUE","TNST","TNTC","UTM","","","")
+pac12 <- c("ARIZ","ASU","CAL","COLO","ORE","ORST","STAN","UCLA","USC","UTAH","WASH","WSU","","","")
+patriot <- c("AMER","ARMY","BU","BUCK","COLG","HC","L-MD","LAF","LEH","NAVY","","","","","")
+sec <- c("ALA","ARK","AUB","FLA","LSU","MISS","MIZ","MSST","SC","TA&M","TENN","UGA","UK","VAN","")
+southern <- c("CIT","ETSU","FUR","MER","SAM","UNCG","UTC","WCU","VMI","WOF","","","","","")
+southland <- c("ACU","AMCC","HBU","LAM","MCNS","NICH","NWST","SELA","SFA","SHSU","UCA","UIW","UNO","","")
+summit <- c("DEN","NDSU","OMA","ORU","SDAK","SDST","UMKC","UND","WIU","","","","","","")
+sunbelt <- c("APP","ARST","CCAR","GAST","GASO","TROY","TXST","UALR","ULL","ULM","USA","UTA","","","")
+swac <- c("AAMU","ALCN","ALST","GRAM","JKST","MVSU","PV","SOU","TXSO","UAPB","","","","","")
+wac <- c("CBU","CHIC","DXST","GCU","NMSU","SEA","TAR","UTRGV","UVU","","","","","","")
+wcc <- c("BYU","GONZ","LMU","PAC","PEPP","PORT","SCU","SF","SMC","USD","","","","","")
+teams <- c(a10,aac,acc,ameast,atlsun,bigeast,b10,b12,bigsky,bigsouth,bigwest,colonial,cusa,horizon,maac,mac,meac,mtw,mvc,nec,ovc,pac12,patriot,sec,southern,southland,summit,sunbelt,swac,wac,wcc)
+teams <- teams[teams != ""]
+
+games <- data.frame(game.id = seq(1,nrow(cbb)/2),
+                    date = as.Date(cbb$Date[c(TRUE, FALSE)]),
+                    away.con = "", home.con = "",
+                    away.ranked = 0, home.ranked = 0,
+                    away.rest = as.integer(NA), home.rest = as.integer(NA),
+                    away.team = cbb$Teams[c(TRUE, FALSE)], home.team = cbb$Teams[c(FALSE, TRUE)],
+                    away.bpi = cbb$BPI[c(TRUE, FALSE)], home.bpi = cbb$BPI[c(FALSE, TRUE)],
+                    away.win = cbb$Win[c(TRUE, FALSE)], home.win = cbb$Win[c(FALSE, TRUE)],
+                    away.spr = cbb$Spr[c(TRUE, FALSE)], home.spr = cbb$Spr[c(FALSE, TRUE)],
+                    away.ml = cbb$ML[c(TRUE, FALSE)], home.ml = cbb$ML[c(FALSE, TRUE)],
+                    away.implied = cbb$Implied[c(TRUE, FALSE)], home.implied = cbb$Implied[c(FALSE, TRUE)],
+                    away.final = cbb$Final[c(TRUE, FALSE)], home.final = cbb$Final[c(FALSE, TRUE)],
+                    away.diff = cbb$Diff[c(TRUE, FALSE)], home.diff = cbb$Diff[c(FALSE, TRUE)],
+                    away.wlp = cbb$WLP[c(TRUE, FALSE)], home.wlp = cbb$WLP[c(FALSE, TRUE)])
+
+for(i in c(1:length(teams))){
+  temp <- filter(games, away.team == teams[i] | home.team == teams[i])
+  for(j in c(1:nrow(temp))){
+    if(temp$away.team[j] == teams[i]){
+      num <- temp$game.id[j]
+      if(j==1)
+        games$away.rest[num] <- games$away.rest[num]
+      else
+        games$away.rest[num] <- temp$date[j] - temp$date[j-1]
+    }
+    if(temp$home.team[j] == teams[i]){
+      num <- temp$game.id[j]
+      if(j==1)
+        games$home.rest[num] <- games$home.rest[num]
+      else
+        games$home.rest[num] <- temp$date[j] - temp$date[j-1]
+    }
+  }
+}
+
+games <- games %>%
+  filter(away.wlp!="Push"|home.wlp!="Push"|is.na(away.wlp)&is.na(home.wlp)) %>%
+  mutate(away.wlp = as.integer(away.wlp),home.wlp = as.integer(home.wlp),
+         bpi=if_else(!is.na(away.bpi),-away.bpi,home.bpi),
+         spr=away.spr,diff=bpi-spr,
+         result=replace_na(away.wlp,-1)+replace_na(home.wlp,-1),
+         result=na_if(result,-2),result=result+1,
+         day=as.factor(wday(date))) %>%
+  select(date,day,away.con,home.con,away.ranked,home.ranked,away.rest,home.rest,away.team,home.team,bpi,away.win,home.win,spr,away.ml,home.ml,away.implied,home.implied,away.final,home.final,diff,away.wlp,home.wlp,result)
+
+conf <- data.frame(a10,aac,acc,ameast,atlsun,bigeast,b10,b12,bigsky,bigsouth,bigwest,colonial,cusa,horizon,maac,mac,meac,mtw,mvc,nec,ovc,pac12,patriot,sec,southern,southland,summit,sunbelt,swac,wac,wcc)
+for(i in c(1:31)){
+  games <- games %>%
+    mutate(away.con=if_else(games$away.team %in% conf[,i],names(conf[i]),away.con),
+           home.con=if_else(games$home.team %in% conf[,i],names(conf[i]),home.con))
+}
+
+week1 <- c("GONZ","BAY","VILL","UVA","IOWA","KU","WISC","ILL","DUKE","UK","CREI","TENN","MSU","TTU","WVU","UNC","HOU","ASU","TEX","ORE","FSU","UCLA","OSU","RUTG","MICH")
+week2 <- c("GONZ","BAY","IOWA","WISC","ILL","DUKE","KU","MSU","CREI","HOU","WVU","VILL","TENN","UNC","UVA","VT","TEX","TTU","RICH","UK","ORE","FSU","OSU","RUTG","ASU")
+week3 <- c("GONZ","BAY","IOWA","MSU","KU","ILL","HOU","CREI","VILL","DUKE","WVU","TENN","TEX","WISC","VT","UNC","TTU","UVA","RICH","FSU","RUTG","OSU","ASU","SDSU","LOU")
+week4 <- c("GONZ","BAY","IOWA","MSU","KU","HOU","VILL","WVU","CREI","TENN","TEX","WISC","ILL","TTU","FSU","MIZ","UVA","SDSU","RUTG","OSU","DUKE","UNC","LOU","CLEM","MICH")
+week5 <- c("GONZ","BAY","KU","IOWA","VILL","HOU","WVU","TENN","WISC","TEX","RUTG","MSU","CREI","MIZ","TTU","UVA","UNC","ILL","MICH","DUKE","FSU","XAV","OSU","VT","ORE")
+week6 <- c("GONZ","BAY","KU","VILL","HOU","WISC","TENN","TEX","WVU","IOWA","CREI","MIZ","TTU","RUTG","ILL","MICH","MSU","FSU","NW","DUKE","MINN","ORE","UVA","VT","OSU")
+week7 <- c("GONZ","BAY","VILL","TEX","IOWA","KU","CREI","WISC","TENN","MICH","HOU","ILL","MIZ","WVU","RUTG","MINN","ORE","TTU","VT","CLEM","DUKE","UVA","SLU","MSU","FSU")
+week8 <- c("GONZ","BAY","VILL","TEX","IOWA","KU","MICH","CREI","WISC","TENN","HOU","CLEM","WVU","ILL","TTU","LOU","MIZ","UVA","DUKE","VT","OSU","ORE","MINN","SLU","CONN")
+week9 <- c("GONZ","BAY","VILL","IOWA","TEX","TENN","MICH","HOU","KU","WISC","CREI","TTU","UVA","WVU","OSU","VT","MINN","ALA","MIZ","CLEM","ORE","ILL","CONN","UCLA","SLU")
+week10 <- c("GONZ","BAY","VILL","MICH","TEX","HOU","IOWA","UVA","ALA","TTU","WVU","MIZ","OSU","WISC","KU","FSU","CREI","TENN","ILL","VT","MINN","SLU","UCLA","OU","LOU")
+week11 <- c("GONZ","BAY","VILL","MICH","HOU","TEX","OSU","IOWA","OU","ALA","TENN","ILL","TTU","UVA","CREI","VT","WVU","MIZ","WISC","FSU","UCLA","FLA","KU","PUR","DRKE")
+week12 <- c("GONZ","BAY","MICH","OSU","VILL","ILL","TTU","HOU","UVA","MIZ","ALA","OU","TEX","WVU","IOWA","TENN","FSU","VT","CREI","USC","WISC","LUC","OKST","PUR","RUTG")
+week13 <- c("GONZ","BAY","MICH","OSU","ILL","HOU","UVA","ALA","OU","VILL","IOWA","TEX","WVU","CREI","TTU","FSU","USC","VT","TENN","MIZ","WISC","LUC","KU","ARK","SDSU")
+week14 <- c("GONZ","BAY","MICH","OSU","ILL","ALA","OU","VILL","IOWA","WVU","FSU","HOU","CREI","TEX","UVA","VT","KU","TTU","USC","ARK","LUC","SDSU","WISC","MIZ","TENN")
+weeks <- data.frame(week1,week2,week3,week4,week5,week6,week7,week8,week9,week10,week11,week12,week13,week14)###############
+for(i in c(1:14)){###############
+  games <- games %>%
+    mutate(away.ranked=if_else(date>=as.Date("2020-11-16")+i*7&date<=as.Date("2020-11-22")+i*7,
+                               if_else(games$away.team %in% weeks[,i],1,away.ranked),away.ranked),
+           home.ranked=if_else(date>=as.Date("2020-11-16")+i*7&date<=as.Date("2020-11-22")+i*7,
+                               if_else(games$home.team %in% weeks[,i],1,home.ranked),home.ranked))
+}
+today <- filter(games,date==Sys.Date())
+games <- filter(games,date!=Sys.Date())
+```
+
+
+
+```{r}
+conresult <- data.frame(matrix(ncol = 6, nrow = 0))
+x <- c("conf", "perc","games","last10","low","high")
+colnames(conresult) <- x
+for(i in c(1:31)){
+  temp <- games %>%
+    filter(away.con==names(conf[i])|home.con==names(conf[i])) %>%
+    filter(!is.na(result)) %>%
+    summarise(mean(result),length(result),sum(result[c((length(result)-9):length(result))]))
+  conresult[i,] <- c(names(conf[i]),temp,temp[,1]-sqrt(temp[,1]*(1-temp[,1])/temp[,2])*1.96,temp[,1]+sqrt(temp[,1]*(1-temp[,1])/temp[,2])*1.96)
+}
+arrange(conresult,desc(perc))
+#games %>%
+#    filter(away.con==names(conf[i])|home.con==names(conf[i])) %>%
+#    filter(!is.na(result))
+```
+
+
+```{r}
+games %>%
+  filter(!is.na(result)) %>%
+  summarise(WinPerc=mean(result),W=sum(result),L=length(result)-W,Low=WinPerc-sqrt(WinPerc*(1-WinPerc)/(W+L))*1.96,High=WinPerc+sqrt(WinPerc*(1-WinPerc)/(W+L))*1.96)
+games %>%
+  filter(!is.na(away.wlp)) %>%
+  summarise(WinPerc=mean(away.wlp),W=sum(away.wlp),L=length(away.wlp)-W,Low=WinPerc-sqrt(WinPerc*(1-WinPerc)/(W+L))*1.96,High=WinPerc+sqrt(WinPerc*(1-WinPerc)/(W+L))*1.96)
+games %>%
+  filter(!is.na(home.wlp)) %>%
+  summarise(WinPerc=mean(home.wlp),W=sum(home.wlp),L=length(home.wlp)-W,Low=WinPerc-sqrt(WinPerc*(1-WinPerc)/(W+L))*1.96,High=WinPerc+sqrt(WinPerc*(1-WinPerc)/(W+L))*1.96)
+```
+
+```{r}
+preadj <- filter(games,!is.na(away.wlp)|!is.na(home.wlp))
+adjresult <- data.frame(matrix(ncol = 14, nrow = 0))
+colnames(adjresult) <- c("adj","perc","zeros","c0","ones","c1","twos","c2","threes","c3","fours","c4","fives","c5")
+for(i in seq(-5,5,.1)){
+  adj <- games %>%
+    filter(!is.na(diff)) %>%
+    mutate(bpi=bpi+i,diff=diff+i,
+           result=if_else(diff<0,if_else(home.final-away.final<spr,1,0),
+                          if_else(diff>0,if_else(home.final-away.final>spr,1,0),-1)),
+           result=na_if(result,-1)) %>%
+    filter(!is.na(result))
+  zeros <- filter(adj,diff>0&diff<1|diff<0&diff>-1)
+  ones <- filter(adj,diff>=1&diff<2|diff<=-1&diff>-2)
+  twos <- filter(adj,diff>=2&diff<3|diff<=-2&diff>-3)
+  threes <- filter(adj,diff>=3&diff<4|diff<=-3&diff>-4)
+  fours <- filter(adj,diff>=4&diff<5|diff<=-4&diff>-5)
+  fives <- filter(adj,diff>=5|diff<=-5)
+  adjresult[i*10+51,] <- c(i,mean(adj$result),mean(zeros$result),length(zeros$result),mean(ones$result),length(ones$result),mean(twos$result),length(twos$result),mean(threes$result),length(threes$result),mean(fours$result),length(fours$result),mean(fives$result),length(fives$result))
+}
+```
+
+```{r}
+games %>%
+  filter(away.ranked==1|home.ranked==1) %>%
+  filter(!is.na(result)) %>%
+  summarise(WinPerc=mean(result),W=sum(result),L=length(result)-W,Low=WinPerc-sqrt(WinPerc*(1-WinPerc)/(W+L))*1.96,High=WinPerc+sqrt(WinPerc*(1-WinPerc)/(W+L))*1.96)
+```
+
+
+```{r}
+res <- games %>%
+  select(day,away.con,home.con,away.ranked,home.ranked,away.rest,home.rest,bpi,spr,away.final,home.final) %>%
+  filter(!is.na(bpi),!is.na(spr)) %>%
+  mutate(final=home.final-away.final,res=final-bpi)
+ggplot(res, aes(res)) +
+  geom_histogram(binwidth = 2)
+
+a1 <- lm(final~bpi,res)
+summary(a1)
+p <- predict(a1, res)
+res$model1 <- lm(a1)$residuals
+ggplot(res, aes(model1)) +
+  geom_histogram(binwidth = 2)
+ggplot(res, aes(model1,bpi)) +
+  geom_point()
+
+a3 <- lm(final~bpi+away.con+home.con,res)
+summary(a3)
+r <- predict(a3, res)
+res$model3 <- lm(a3)$residuals
+ggplot(res, aes(model3)) +
+  geom_histogram(binwidth = 2)
+ggplot(res, aes(model3,bpi)) +
+  geom_point()
+
+a4 <- lm(final~bpi+away.con+home.con+away.ranked+home.ranked,res)
+summary(a4)
+t <- predict(a4, res)
+res$model4 <- lm(a4)$residuals
+ggplot(res, aes(model4)) +
+  geom_histogram(binwidth = 2)
+ggplot(res, aes(model4,bpi)) +
+  geom_point()
+
+a5 <- lm(final~bpi+away.con+home.con+away.ranked+home.ranked+day,res)
+summary(a5)
+t <- predict(a5, res)
+res$model5 <- lm(a5)$residuals
+ggplot(res, aes(model5)) +
+  geom_histogram(binwidth = 2)
+ggplot(res, aes(model5,bpi)) +
+  geom_point()
+
+a6 <- lm(final~bpi+away.con+home.con+away.ranked+home.ranked+away.rest+home.rest,res)
+summary(a6)
+u <- predict(a6, res)
+res$model6 <- res$final-u
+ggplot(res, aes(model6)) +
+  geom_histogram(binwidth = 2)
+ggplot(res, aes(model6,bpi)) +
+  geom_point()
+#plot(a1)
+#plot(a3)
+plot(a4)
+#plot(a5)
+plot(a6)
+sd(res$model4)
+sd6 <-filter(res,!is.na(model6))
+sd(sd6$model6)
+#which.max(hatvalues(a4))
+hat <- as.data.frame(hatvalues(a6))
+filter(hat,hatvalues(a6)>.15)
+```
+
+```{r}
+baseresult <- data.frame(matrix(ncol = 14, nrow = 0))
+colnames(baseresult) <- c("adj","perc","zeros","c0","ones","c1","twos","c2","threes","c3","fours","c4","fives","c5")
+for(i in seq(-5,5,.1)){
+  base <- games %>%
+    filter(!is.na(diff)) %>%
+    mutate(bpi=bpi+i,diff=bpi-spr,
+           result=if_else(diff<0,if_else(home.final-away.final<spr,1,0),
+                          if_else(diff>0,if_else(home.final-away.final>spr,1,0),-1)),
+           result=na_if(result,-1)) %>%
+    filter(!is.na(result),date>=as.Date("2021-01-01"))
+  zeros <- filter(base,diff>0&diff<1|diff<0&diff>-1)
+  ones <- filter(base,diff>=1&diff<2|diff<=-1&diff>-2)
+  twos <- filter(base,diff>=2&diff<3|diff<=-2&diff>-3)
+  threes <- filter(base,diff>=3&diff<4|diff<=-3&diff>-4)
+  fours <- filter(base,diff>=4&diff<5|diff<=-4&diff>-5)
+  fives <- filter(base,diff>=5|diff<=-5)
+  baseresult[i*10+51,] <- c(i,mean(base$result),mean(zeros$result),length(zeros$result),mean(ones$result),length(ones$result),mean(twos$result),length(twos$result),mean(threes$result),length(threes$result),mean(fours$result),length(fours$result),mean(fives$result),length(fives$result))
+}
+```
+```{r}
+m1result <- data.frame(matrix(ncol = 14, nrow = 0))
+colnames(m1result) <- c("adj","perc","zeros","c0","ones","c1","twos","c2","threes","c3","fours","c4","fives","c5")
+for(i in seq(-5,5,.1)){
+  m1 <- games %>%
+    filter(!is.na(diff)) %>%
+    mutate(bpi=p+i,diff=bpi-spr,
+           result=if_else(diff<0,if_else(home.final-away.final<spr,1,0),
+                          if_else(diff>0,if_else(home.final-away.final>spr,1,0),-1)),
+           result=na_if(result,-1)) %>%
+    filter(!is.na(result),date>=as.Date("2021-01-01"))
+  zeros <- filter(m1,diff>0&diff<1|diff<0&diff>-1)
+  ones <- filter(m1,diff>=1&diff<2|diff<=-1&diff>-2)
+  twos <- filter(m1,diff>=2&diff<3|diff<=-2&diff>-3)
+  threes <- filter(m1,diff>=3&diff<4|diff<=-3&diff>-4)
+  fours <- filter(m1,diff>=4&diff<5|diff<=-4&diff>-5)
+  fives <- filter(m1,diff>=5|diff<=-5)
+  m1result[i*10+51,] <- c(i,mean(m1$result),mean(zeros$result),length(zeros$result),mean(ones$result),length(ones$result),mean(twos$result),length(twos$result),mean(threes$result),length(threes$result),mean(fours$result),length(fours$result),mean(fives$result),length(fives$result))
+}
+```
+```{r}
+m3result <- data.frame(matrix(ncol = 14, nrow = 0))
+colnames(m3result) <- c("adj","perc","zeros","c0","ones","c1","twos","c2","threes","c3","fours","c4","fives","c5")
+for(i in seq(-5,5,.1)){
+  m3 <- games %>%
+    filter(!is.na(diff)) %>%
+    mutate(bpi=r+i,diff=bpi-spr,
+           result=if_else(diff<0,if_else(home.final-away.final<spr,1,0),
+                          if_else(diff>0,if_else(home.final-away.final>spr,1,0),-1)),
+           result=na_if(result,-1)) %>%
+    filter(!is.na(result),date>=as.Date("2021-01-01"))
+  zeros <- filter(m3,diff>0&diff<1|diff<0&diff>-1)
+  ones <- filter(m3,diff>=1&diff<2|diff<=-1&diff>-2)
+  twos <- filter(m3,diff>=2&diff<3|diff<=-2&diff>-3)
+  threes <- filter(m3,diff>=3&diff<4|diff<=-3&diff>-4)
+  fours <- filter(m3,diff>=4&diff<5|diff<=-4&diff>-5)
+  fives <- filter(m3,diff>=5|diff<=-5)
+  m3result[i*10+51,] <- c(i,mean(m3$result),mean(zeros$result),length(zeros$result),mean(ones$result),length(ones$result),mean(twos$result),length(twos$result),mean(threes$result),length(threes$result),mean(fours$result),length(fours$result),mean(fives$result),length(fives$result))
+}
+```
+```{r}
+m4result <- data.frame(matrix(ncol = 14, nrow = 0))
+colnames(m4result) <- c("adj","perc","zeros","c0","ones","c1","twos","c2","threes","c3","fours","c4","fives","c5")
+for(i in seq(-5,5,.1)){
+  m4 <- games %>%
+    filter(!is.na(diff)) %>%
+    mutate(bpi=r+i,diff=bpi-spr,
+           result=if_else(diff<0,if_else(home.final-away.final<spr,1,0),
+                          if_else(diff>0,if_else(home.final-away.final>spr,1,0),-1)),
+           result=na_if(result,-1)) %>%
+    filter(!is.na(result),date>=as.Date("2021-01-01"))
+  zeros <- filter(m4,diff>0&diff<1|diff<0&diff>-1)
+  ones <- filter(m4,diff>=1&diff<2|diff<=-1&diff>-2)
+  twos <- filter(m4,diff>=2&diff<3|diff<=-2&diff>-3)
+  threes <- filter(m4,diff>=3&diff<4|diff<=-3&diff>-4)
+  fours <- filter(m4,diff>=4&diff<5|diff<=-4&diff>-5)
+  fives <- filter(m4,diff>=5|diff<=-5)
+  m4result[i*10+51,] <- c(i,mean(m4$result),mean(zeros$result),length(zeros$result),mean(ones$result),length(ones$result),mean(twos$result),length(twos$result),mean(threes$result),length(threes$result),mean(fours$result),length(fours$result),mean(fives$result),length(fives$result))
+}
+```
+```{r}
+m5result <- data.frame(matrix(ncol = 14, nrow = 0))
+colnames(m5result) <- c("adj","perc","zeros","c0","ones","c1","twos","c2","threes","c3","fours","c4","fives","c5")
+for(i in seq(-5,5,.1)){
+  m5 <- games %>%
+    filter(!is.na(diff)) %>%
+    mutate(bpi=t+i,diff=bpi-spr,
+           result=if_else(diff<0,if_else(home.final-away.final<spr,1,0),
+                          if_else(diff>0,if_else(home.final-away.final>spr,1,0),-1)),
+           result=na_if(result,-1)) %>%
+    filter(!is.na(result),date>=as.Date("2021-01-01"))
+  zeros <- filter(m5,diff>0&diff<1|diff<0&diff>-1)
+  ones <- filter(m5,diff>=1&diff<2|diff<=-1&diff>-2)
+  twos <- filter(m5,diff>=2&diff<3|diff<=-2&diff>-3)
+  threes <- filter(m5,diff>=3&diff<4|diff<=-3&diff>-4)
+  fours <- filter(m5,diff>=4&diff<5|diff<=-4&diff>-5)
+  fives <- filter(m5,diff>=5|diff<=-5)
+  m5result[i*10+51,] <- c(i,mean(m5$result),mean(zeros$result),length(zeros$result),mean(ones$result),length(ones$result),mean(twos$result),length(twos$result),mean(threes$result),length(threes$result),mean(fours$result),length(fours$result),mean(fives$result),length(fives$result))
+}
+```
+```{r}
+m6result <- data.frame(matrix(ncol = 14, nrow = 0))
+colnames(m6result) <- c("adj","perc","zeros","c0","ones","c1","twos","c2","threes","c3","fours","c4","fives","c5")
+for(i in seq(-5,5,.1)){
+  m6 <- games %>%
+    filter(!is.na(diff)) %>%
+    mutate(bpi=u+i,diff=bpi-spr,
+           result=if_else(diff<0,if_else(home.final-away.final<spr,1,0),
+                          if_else(diff>0,if_else(home.final-away.final>spr,1,0),-1)),
+           result=na_if(result,-1)) %>%
+    filter(!is.na(result),date>=as.Date("2021-01-01"))
+  zeros <- filter(m6,diff>0&diff<1|diff<0&diff>-1)
+  ones <- filter(m6,diff>=1&diff<2|diff<=-1&diff>-2)
+  twos <- filter(m6,diff>=2&diff<3|diff<=-2&diff>-3)
+  threes <- filter(m6,diff>=3&diff<4|diff<=-3&diff>-4)
+  fours <- filter(m6,diff>=4&diff<5|diff<=-4&diff>-5)
+  fives <- filter(m6,diff>=5|diff<=-5)
+  m6result[i*10+51,] <- c(i,mean(m6$result),mean(zeros$result),length(zeros$result),mean(ones$result),length(ones$result),mean(twos$result),length(twos$result),mean(threes$result),length(threes$result),mean(fours$result),length(fours$result),mean(fives$result),length(fives$result))
+}
+```
+
+```{r}
+games.m6 <- filter(games,!is.na(diff),!is.na(away.rest),!is.na(home.rest))
+games.m6$bpi <- suppressWarnings(predict(a6,games.m6))
+games.m6 <- mutate(games.m6,diff=bpi-spr,result=if_else(diff<0,if_else(home.final-away.final<spr,1,0),if_else(diff>0,if_else(home.final-away.final>spr,1,0),-1)),result=na_if(result,-1))
+
+team.correct <- data.frame(matrix(ncol = 3, nrow = 0))
+colnames(team.correct) <- c("team","correctpct","games")
+for(i in 1:length(teams)){
+  temp <- games.m6 %>%
+    filter(away.team==teams[i]|home.team==teams[i]) %>%
+    select(result) %>%
+    summarise(correctpct=mean(result),games=length(result))
+  team.correct[i,1] <- teams[i]
+  team.correct[i,2] <- round(temp[,1],3)
+  team.correct[i,3] <- temp[,2]
+}
+pick <- filter(team.correct,correctpct>=.8,games>=10)
+```
+```{r}
+today <- filter(today,!is.na(bpi),!is.na(spr))
+today$pred.bpi <- suppressWarnings(predict(a6,today))
+today <- today %>%
+  mutate(pick.diff=pred.bpi-spr, str.pick=ifelse(pick.diff<0,away.team,home.team),
+         good0=if_else(abs(pick.diff-4.9)<1,1,0),###
+         good1=if_else(abs(pick.diff-1.9)>=1&abs(pick.diff-1.9)<2,1,0),#
+         good2=if_else(abs(pick.diff-2.9)>=2&abs(pick.diff-3.1)<3,1,0),##
+         good3=if_else(abs(pick.diff+0.0)>=3&abs(pick.diff+0.0)<4,1,0),
+         good4=if_else(abs(pick.diff-0.8)>=4&abs(pick.diff-0.8)<5,1,0),
+         good5=if_else(abs(pick.diff+0.4)>=5,1,0),#
+         bad0=if_else(abs(pick.diff+1.5)<1,-1,0),###
+         bad1=if_else(abs(pick.diff+4.5)>=1&abs(pick.diff+4.5)<2,-1,0),###
+         bad2=if_else(abs(pick.diff+2.1)>=2&abs(pick.diff+2.1)<3,-1,0),###
+         bad3=if_else(abs(pick.diff+3.1)>=3&abs(pick.diff+3.1)<4,-1,0),###
+         bad4=if_else(abs(pick.diff+4.1)>=4&abs(pick.diff+4.1)<5,-1,0),###
+         bad5=if_else(abs(pick.diff+4.9)>=5,-1,0),#####
+         sum=2/3*good1+1/3*good2+good3+good4+2/3*good5)
+today %>%
+  mutate(spr2=if_else(str.pick==away.team,spr,-spr)) %>%
+  select(away.team,home.team,pick.diff,sum,str.pick,spr2) %>%
+  filter(sum>0|sum<0)
+today %>%
+  filter(away.team %in% pick$team|home.team %in% pick$team | away.con=="aac"|home.con=="aac"|away.con=="patriot"|home.con=="patriot") %>%
+  mutate(spr2=if_else(str.pick==away.team,spr,-spr),pf="Pick") %>%
+  select(away.team,home.team,pick.diff,pf,str.pick,spr2)
+today %>%
+  filter(pick.diff>=3|pick.diff<=-3) %>%
+  mutate(spr2=if_else(str.pick==away.team,spr,-spr)) %>%
+  select(away.team,home.team,pick.diff,str.pick,spr2)
+```
+```{r}
+z1 <- .5694
+z2 <- .4548
+z1-sqrt(z1*(1-z1)/(216))*1.96
+z1+sqrt(z1*(1-z1)/(100))*1.96
+z2-sqrt(z2*(1-z2)/(100))*1.96
+z2+sqrt(z2*(1-z2)/(288))*1.96
+```
+
+
+
+```{r}
+games.m6 %>%
+  filter(!is.na(result)) %>%
+  summarise(WinPerc=mean(result),W=sum(result),L=length(result)-W,Low=WinPerc-sqrt(WinPerc*(1-WinPerc)/(W+L))*1.96,High=WinPerc+sqrt(WinPerc*(1-WinPerc)/(W+L))*1.96)
+games.m6 %>%
+  filter(diff<0) %>%
+  summarise(WinPerc=mean(result),W=sum(result),L=length(result)-W,Low=WinPerc-sqrt(WinPerc*(1-WinPerc)/(W+L))*1.96,High=WinPerc+sqrt(WinPerc*(1-WinPerc)/(W+L))*1.96)
+games.m6 %>%
+  filter(diff>0) %>%
+  summarise(WinPerc=mean(result),W=sum(result),L=length(result)-W,Low=WinPerc-sqrt(WinPerc*(1-WinPerc)/(W+L))*1.96,High=WinPerc+sqrt(WinPerc*(1-WinPerc)/(W+L))*1.96)
+```
+```{r}
+games.m6 %>%
+  filter(away.ranked==1|home.ranked==1) %>%
+  filter(!is.na(result)) %>%
+  summarise(WinPerc=mean(result),W=sum(result),L=length(result)-W,Low=WinPerc-sqrt(WinPerc*(1-WinPerc)/(W+L))*1.96,High=WinPerc+sqrt(WinPerc*(1-WinPerc)/(W+L))*1.96)
+```
+```{r}
+conresult <- data.frame(matrix(ncol = 6, nrow = 0))
+x <- c("conf", "perc","games","last10","low","high")
+colnames(conresult) <- x
+for(i in c(1:31)){
+  temp <- games.m6 %>%
+    filter(away.con==names(conf[i])|home.con==names(conf[i])) %>%
+    filter(!is.na(result)) %>%
+    summarise(mean(result),length(result),sum(result[c((length(result)-9):length(result))]))
+  conresult[i,] <- c(names(conf[i]),temp,temp[,1]-sqrt(temp[,1]*(1-temp[,1])/temp[,2])*1.96,temp[,1]+sqrt(temp[,1]*(1-temp[,1])/temp[,2])*1.96)
+}
+arrange(conresult,desc(perc))
+```
+```{r}
+dayofweek <- data.frame(matrix(ncol = 5, nrow = 0))
+x <- c("day", "perc","games","low","high")
+colnames(dayofweek) <- x
+for(i in c(1:7)){
+  temp <- games.m6 %>%
+    filter(day==i) %>%
+    filter(!is.na(result)) %>%
+    summarise(mean(result),length(result))
+  dayofweek[i,] <- c(i,temp,temp[,1]-sqrt(temp[,1]*(1-temp[,1])/temp[,2])*1.96,temp[,1]+sqrt(temp[,1]*(1-temp[,1])/temp[,2])*1.96)
+}
+arrange(dayofweek,desc(perc))
+```
+```{r}
+daysofrest <- data.frame(matrix(ncol = 5, nrow = 0))
+x <- c("day", "perc","games","low","high")
+colnames(daysofrest) <- x
+for(i in c(1:9)){
+  if(i<9){
+    temp <- games.m6 %>%
+      filter(away.rest==i|home.rest==i) %>%
+      filter(!is.na(result)) %>%
+      summarise(mean(result),length(result))
+  }
+  else{
+    temp <- games.m6 %>%
+      filter(away.rest>=i|home.rest>=i) %>%
+      filter(!is.na(result)) %>%
+      summarise(mean(result),length(result))
+  }
+  daysofrest[i,] <- c(i,temp,temp[,1]-sqrt(temp[,1]*(1-temp[,1])/temp[,2])*1.96,temp[,1]+sqrt(temp[,1]*(1-temp[,1])/temp[,2])*1.96)
+}
+#daysofrest
+arrange(daysofrest,desc(perc))
+```
+
+
+
+
+```{r}
+games.m4 <- filter(games,!is.na(diff))
+games.m4$bpi <- suppressWarnings(predict(a4,games.m4))
+games.m4 <- mutate(games.m4,diff=bpi-spr,result=if_else(diff<0,if_else(home.final-away.final<spr,1,0),if_else(diff>0,if_else(home.final-away.final>spr,1,0),-1)),result=na_if(result,-1))
+
+team.correct <- data.frame(matrix(ncol = 3, nrow = 0))
+colnames(team.correct) <- c("team","correctpct","games")
+for(i in 1:length(teams)){
+  temp <- games.m4 %>%
+    filter(away.team==teams[i]|home.team==teams[i]) %>%
+    select(result) %>%
+    summarise(correctpct=mean(result),games=length(result))
+  team.correct[i,1] <- teams[i]
+  team.correct[i,2] <- round(temp[,1],3)
+  team.correct[i,3] <- temp[,2]
+}
+pick <- filter(team.correct,correctpct>=.8,games>=10)
+```
+```{r}
+today <- filter(today,!is.na(bpi),!is.na(spr))
+today$pred.bpi <- suppressWarnings(predict(a4,today))
+today <- today %>%
+  mutate(pick.diff=pred.bpi-spr, str.pick=ifelse(pick.diff<0,away.team,home.team),
+         good0=if_else(abs(pick.diff+3.9)<1,1,0),###
+         good1=if_else(abs(pick.diff-2.1)>=1&abs(pick.diff-2.1)<2,1,0),###
+         good2=if_else(abs(pick.diff-3.1)>=2&abs(pick.diff-3.1)<3,1,0),###
+         good3=if_else(abs(pick.diff-0.4)>=3&abs(pick.diff-0.4)<4,1,0),
+         good4=if_else(abs(pick.diff+0.0)>=4&abs(pick.diff+0.0)<5,1,0),#
+         good5=if_else(abs(pick.diff+1.4)>=5,1,0),##
+         bad0=if_else(abs(pick.diff+1.5)<1,-1,0),###
+         bad1=if_else(abs(pick.diff+4.6)>=1&abs(pick.diff+4.6)<2,-1,0),##
+         bad2=if_else(abs(pick.diff+1.4)>=2&abs(pick.diff+1.4)<3,-1,0),###
+         bad3=if_else(abs(pick.diff+2.9)>=3&abs(pick.diff+2.9)<4,-1,0),###
+         bad4=if_else(abs(pick.diff+3.9)>=4&abs(pick.diff+3.9)<5,-1,0),###
+         bad5=if_else(abs(pick.diff+4.9)>=5,-1,0),#####
+         sum=good3+2/3*good4+1/3*good5+1/3*bad1)
+today %>%
+  mutate(spr2=if_else(str.pick==away.team,spr,-spr)) %>%
+  select(away.team,home.team,pick.diff,sum,str.pick,spr2) %>%
+  filter(sum>0|sum<0)
+today %>%
+  filter(away.team %in% pick$team|home.team %in% pick$team) %>%
+  mutate(spr2=if_else(str.pick==away.team,spr,-spr),pf="Pick") %>%
+  select(away.team,home.team,pf,str.pick,spr2)
+today %>%
+  filter(pick.diff>=3|pick.diff<=-3) %>%
+  mutate(spr2=if_else(str.pick==away.team,spr,-spr)) %>%
+  select(away.team,home.team,pick.diff,str.pick,spr2)
+```
