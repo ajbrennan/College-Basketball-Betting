@@ -1,3 +1,3 @@
-# College_Basketball_Betting
+# College-Basketball-Betting
 I am working on creating a model to predict college basketball scores to make smarter sports wagers. This is kinda messy and basic right now, I'm using this as kind of a trial run for creating stronger models for NBA (currently working on in the background) and MLB games. The only input is ESPN's BPI rankings. I wanted to keep it basic since I'm building the model from scratch and the shear volume of games in college basketball compared to the NBA and MLB.
 I plan to revamp this project and make some major changes to make it more similar to my MLB model by next November.
